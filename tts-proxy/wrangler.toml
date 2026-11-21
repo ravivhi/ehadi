@@ -1,0 +1,6 @@
+name = "ehadi-tts"
+main = "worker.js"
+compatibility_date = "2026-11-01"
+
+# Secret (not in this file): GOOGLE_TTS_KEY
+#   npx wrangler secret put GOOGLE_TTS_KEY
