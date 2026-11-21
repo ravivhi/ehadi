@@ -497,6 +497,24 @@
       var p = a.play(); if (p && p.catch) p.catch(function (e) { if (e && e.name === 'NotAllowedError') done(); else fallback(); });
     }, fallback);
   }
+  /* No voice for this language on the device (e.g. Samsung's engine has no Hebrew): explain how to add one,
+     once per session, until the user says not to show it again. */
+  var HELP_OFF = 'mathoria:voiceHelpOff';
+  function voiceHelp(lang) {
+    var off = null; try { off = G.localStorage.getItem(HELP_OFF); } catch (e) { /* storage blocked */ }
+    if (off || !hasDOM || !document.getElementById('modal-root')) return;
+    var t = MA.t, he = /^(he|iw)/i.test(lang), heUI = MA.i18n.dir() === 'rtl', name = he ? (heUI ? 'עברית' : 'Hebrew') : (heUI ? 'אנגלית' : 'English');
+    var android = /Android/i.test(G.navigator.userAgent || '');
+    var body = h('div', { class: 'stack voice-help' }, h('p', null, t('speech_no_voice', { lang: name })),
+      android ? h('ol', null, h('li', null, t('voice_step_install'), ' ',
+          h('a', { href: 'https://play.google.com/store/apps/details?id=com.google.android.tts', target: '_blank', rel: 'noopener' }, t('voice_store_link'))),
+        h('li', null, t('voice_step_engine')), h('li', null, t('voice_step_lang', { lang: name })))
+        : h('p', null, t('voice_other_device', { lang: name })),
+      h('p', { class: 'muted' }, t('voice_after')));
+    MA.modal({ title: t('voice_title'), icon: '🔇', body: body, actions: [
+      { label: t('voice_dont_show'), cls: 'btn-ghost', onClick: function () { try { G.localStorage.setItem(HELP_OFF, '1'); } catch (e) { /* ignore */ } } },
+      { label: t('ok'), cls: 'btn-primary' }] });
+  }
   function pump() {
     if (sp.current || !sp.queue.length) return;
     var item = sp.queue[0];
@@ -507,7 +525,7 @@
     }
     item = sp.queue.shift();
     var gen = sp.gen, v = voiceFor(item.lang), ut;
-    if (!v && !CLOUD.url && !sp.warned && (G.speechSynthesis.getVoices() || []).length) { sp.warned = true; MA.toast(MA.t('speech_no_voice'), { icon: '🔇', ms: 6000 }); }
+    if (!v && !CLOUD.url && !sp.warned && (G.speechSynthesis.getVoices() || []).length) { sp.warned = true; voiceHelp(item.lang); }
     try {
       ut = new G.SpeechSynthesisUtterance(item.text);
       ut.lang = item.lang; if (v) ut.voice = v; ut.rate = .9;
