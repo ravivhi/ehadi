@@ -3,3 +3,17 @@ __pycache__/
 node_modules/
 .DS_Store
 Thumbs.db
+
+# Android build outputs and local state
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.aab
+*.apk
+*.idsig
+
+# Signing keys never go in git (they live in ~/signing-keys/ehadi)
+*.keystore
+*.jks
+signing-secrets.txt
