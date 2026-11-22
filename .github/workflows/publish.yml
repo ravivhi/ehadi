@@ -1,0 +1,38 @@
+# Publishes ehadi automatically: every push to main that changes the web app asks ravivhi/guessingGame
+# to run its "Sync ehadi" workflow, which pulls this repo onto https://ravivh.com/ehadi/.
+#
+# Needs the repo secret GUESSINGGAME_DISPATCH_TOKEN: a fine-grained token for ravivhi/guessingGame
+# only, with only "Actions: Read and write". It can start (or stop) workflows there, but it cannot
+# read or change any code in guessingGame.
+name: Publish to ravivh.com/ehadi
+
+on:
+  push:
+    branches: [main]
+    # the same folders the sync leaves out: changes only there don't need publishing
+    paths-ignore:
+      - 'tests/**'
+      - 'android/**'
+      - 'play-assets/**'
+      - 'tts-proxy/**'
+      - '.github/**'
+      - '**/*.md'
+      - '.gitignore'
+  workflow_dispatch:   # publish now without a code change (Actions → this workflow → Run workflow)
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start "Sync ehadi" in guessingGame
+        env:
+          GH_TOKEN: ${{ secrets.GUESSINGGAME_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::The secret GUESSINGGAME_DISPATCH_TOKEN is not set in ravivhi/ehadi."
+            exit 1
+          fi
+          gh workflow run sync-ehadi.yml -R ravivhi/guessingGame
+          echo "Started. Progress: https://github.com/ravivhi/guessingGame/actions/workflows/sync-ehadi.yml"
